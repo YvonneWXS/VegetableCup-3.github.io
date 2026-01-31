@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鲜蔬杯#3 岁的界园志意 得分计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .module {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f0f0f0;
+        }
+
+        .module h3 {
+            color: #2d8b57;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f5f9f7;
+            display: flex;
+            align-items: center;
+        }
+
+        .module h3::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: #2d8b57;
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+
+        .form-item {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .form-item label {
+            width: 200px;
+            font-size: 14px;
+            color: #444;
+            flex-shrink: 0;
+        }
+
+        .form-item input[type="number"],
+        .form-item select {
+            padding: 8px 12px;
+            width: 180px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+            background: #fafafa;
+        }
+
+        .form-item input[type="number"]:focus,
+        .form-item select:focus {
+            border-color: #66cc99;
+            box-shadow: 0 0 0 3px rgba(102, 204, 153, 0.1);
+            background: #fff;
+        }
+
+        .form-item input[type="checkbox"],
+        .route-item input[type="radio"] {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            margin-right: 8px;
+        }
+
+        .form-item input[type="checkbox"]:checked,
+        .route-item input[type="radio"]:checked {
+            background: #2d8b57;
+            border-color: #2d8b57;
+        }
+
+        .form-item input[type="checkbox"]:checked::after,
+        .route-item input[type="radio"]:checked::after {
+            content: "✓";
+            position: absolute;
+            color: #fff;
+            font-size: 12px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .route-item input[type="radio"] {
+            border-radius: 50%;
+        }
+
+        .route-item input[type="radio"]:checked::after {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .route-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 0;
+        }
+
+        .route-item {
+            width: 50%;
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            cursor: pointer;
+        }
+
+        .route-item label {
+            font-size: 14px;
+            color: #444;
+            cursor: pointer;
+            width: auto !important;
+        }
+
+        .level-item {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .level-item label:first-child {
+            width: 100px;
+            color: #666;
+        }
+
+        .level-item input {
+            width: 80px;
+            text-align: center;
+        }
+
+        /* 核心修复：加宽分值列宽度，避免长数值与“分”字重叠 */
+        .score-detail {
+            font-size: 14px;
+            display: grid;
+            /* 调整：分值列从60px加宽到100px，足够容纳长数值 */
+            grid-template-columns: 1fr 100px 20px;
+            row-gap: 8px;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .score-detail .label {
+            text-align: left;
+            color: #555;
+        }
+
+        .score-detail .value {
+            text-align: right;
+            font-weight: 600;
+            /* 防止数值过宽时溢出 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .score-detail .unit {
+            text-align: left;
+            color: #555;
+            margin-left: 4px;
+        }
+
+        .score-detail .value.add {
+            color: #2d8b57;
+        }
+
+        .score-detail .value.minus {
+            color: #e63946;
+        }
+
+        .score-detail .total-row {
+            grid-column: 1 / 4;
+            /* 总分行同步加宽分值列 */
+            display: grid;
+            grid-template-columns: 1fr 100px 20px;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #f5f9f7;
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d8b57;
+        }
+
+        .score-detail .total-row .label {
+            color: #2d8b57;
+        }
+
+        .score-detail .total-row .value {
+            color: #e63946;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .score-detail .total-row .unit {
+            color: #e63946;
+            font-size: 18px;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #66cc99;
+        }
+
+        @media (max-width: 768px) {
+            .form-item {
+                flex-wrap: wrap;
+            }
+
+            .form-item label {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+
+            .form-item input[type="number"],
+            .form-item select {
+                width: 100%;
+            }
+
+            .route-item {
+                width: 100%;
+            }
+
+            .score-detail {
+                /* 移动端分值列也适当加宽 */
+                grid-template-columns: 1fr 80px 20px;
+            }
+
+            .score-detail .total-row {
+                grid-template-columns: 1fr 80px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2
+            style="text-align: center; margin: 20px 0; color: #2d8b57; font-size: 24px; font-weight: 700; letter-spacing: 1px;">
+            鲜蔬杯#3 岁的界园志意 得分计算器</h2>
+
+        <!-- 基础信息 -->
+        <div class="module" id="base-info">
+            <h3>基础信息</h3>
+            <div class="form-item">
+                <label for="difficulty">比赛难度：</label>
+                <select id="difficulty" onchange="calculateScore()">
+                    <option value="N15">N15</option>
+                    <option value="N18">N18</option>
+                </select>
+            </div>
+            <div class="form-item">
+                <label for="bank">取源石碇：</label>
+                <input type="number" id="bank" min="0" step="1" placeholder="请输入取源石碇数量" oninput="calculateScore()">
+            </div>
+            <div class="form-item">
+                <label for="base-score">游戏内结算分数：</label>
+                <input type="number" id="base-score" min="0" step="1" placeholder="请输入结算分数" oninput="calculateScore()">
+            </div>
+        </div>
+
+        <!-- 干员加分 -->
+        <div class="module" id="operator-score">
+            <h3>干员加分</h3>
+            <div class="form-item">
+                <label for="temp-operator">临时招募干员数量：</label>
+                <input type="number" id="temp-operator" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item">
+                <input type="checkbox" id="no-ban-operator" onchange="calculateScore()">
+                <label for="no-ban-operator" style="width: auto;">未使用禁用干员（电弧、新约能天使、酒神、维什戴尔、丰川祥子、圣聆初雪、凛御银灰）加325分</label>
+            </div>
+        </div>
+
+        <!-- 路线选择 -->
+        <div class="module" id="route-select">
+            <h3>路线选择</h3>
+            <div class="route-options">
+                <div class="route-item">
+                    <input type="radio" name="route" id="route0" value="0" checked onchange="calculateScore()">
+                    <label for="route0">未达成任何结局，不加分</label>
+                </div>
+                <div class="route-item">
+                    <input type="radio" name="route" id="route1" value="200" onchange="calculateScore()">
+                    <label for="route1">达成结局235 +200分</label>
+                </div>
+                <div class="route-item">
+                    <input type="radio" name="route" id="route2" value="145" onchange="calculateScore()">
+                    <label for="route2">达成结局135 +145分</label>
+                </div>
+                <div class="route-item">
+                    <input type="radio" name="route" id="route3" value="140" onchange="calculateScore()">
+                    <label for="route3">达成结局245 +140分</label>
+                </div>
+                <div class="route-item">
+                    <input type="radio" name="route" id="route4" value="180" onchange="calculateScore()">
+                    <label for="route4">带三结局前置藏品达成结局145 +180分</label>
+                </div>
+                <div class="route-item">
+                    <input type="radio" name="route" id="route5" value="240" onchange="calculateScore()">
+                    <label for="route5">带三结局前置藏品达成结局245 +240分</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关卡完成情况 -->
+        <div class="module" id="level-complete">
+            <h3>关卡完成情况</h3>
+            <div class="form-item level-item">
+                <label>三层 云瓦亭</label>
+                <label for="level1">紧急 长驱不复（15分）：</label>
+                <input type="number" id="level1" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label>四层 汝吾门</label>
+                <label for="level2">紧急 山海必争（30分）：</label>
+                <input type="number" id="level2" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level3">紧急 忍气不吞声（20分）：</label>
+                <input type="number" id="level3" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label>五层 见字祠</label>
+                <label for="level4">紧急 邙山镇地方志（45分）：</label>
+                <input type="number" id="level4" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level5">紧急 不成烟火（45分）：</label>
+                <input type="number" id="level5" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level6">紧急 离域检查（30分）：</label>
+                <input type="number" id="level6" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level7">紧急 砺锋（40分）：</label>
+                <input type="number" id="level7" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label>六层 始末陵</label>
+                <label for="level8">普通 炎灼（30分）：</label>
+                <input type="number" id="level8" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level9">紧急 炎灼（45分）：</label>
+                <input type="number" id="level9" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level10">普通 越山海（50分）：</label>
+                <input type="number" id="level10" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level11">紧急 越山海（80分）：</label>
+                <input type="number" id="level11" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level12">普通 借力打力（30分）：</label>
+                <input type="number" id="level12" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level13">紧急 借力打力（45分）：</label>
+                <input type="number" id="level13" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label>不期而遇</label>
+                <label for="level14">紧急 硅基伥的宴席（30分）：</label>
+                <input type="number" id="level14" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level15">紧急 彻底失控（40分）：</label>
+                <input type="number" id="level15" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level16">紧急 劫罚（20分）：</label>
+                <input type="number" id="level16" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+            <div class="form-item level-item">
+                <label></label>
+                <label for="level17">紧急 硕果累累（30分）：</label>
+                <input type="number" id="level17" min="0" step="1" value="0" oninput="calculateScore()">
+            </div>
+        </div>
+
+        <!-- 特殊加分 -->
+        <div class="module">
+            <h3>特殊加分</h3>
+            <div class="form-item">
+                <label for="kill4">击杀流泪小子、鸭爵、高普尼克、园仔（5分/个）：</label>
+                <input type="number" id="kill4" min="0" step="1" placeholder="请输入击杀数量" oninput="calculateScore()">
+            </div>
+            <div class="form-item">
+                <label for="collection">藏品（5分/个）：</label>
+                <input type="number" id="collection" min="0" step="1" placeholder="请输入藏品数量" oninput="calculateScore()">
+            </div>
+            <div class="form-item">
+                <input type="checkbox" id="kill1" onchange="calculateScore()">
+                <label for="kill1" style="width: auto;">击杀小八界（7分）</label>
+            </div>
+        </div>
+
+        <!-- 得分详情 -->
+        <div class="module" id="score-info">
+            <h3>得分详情</h3>
+            <div class="score-detail">
+                <span class="label">难度倍率分（N18×1.2）：</span>
+                <span class="value add" id="difficulty-score">0</span>
+                <span class="unit">分</span>
+
+                <span class="label">取源石碇扣分：</span>
+                <span class="value minus" id="bank-score">0</span>
+                <span class="unit">分</span>
+
+                <span class="label">干员招募加分：</span>
+                <span class="value add" id="operator-add">0</span>
+                <span class="unit">分</span>
+
+                <span class="label">路线选择加分：</span>
+                <span class="value add" id="route-add">0</span>
+                <span class="unit">分</span>
+
+                <span class="label">关卡完成总加分：</span>
+                <span class="value add" id="level-add">0</span>
+                <span class="unit">分</span>
+
+                <span class="label">特殊加分：</span>
+                <span class="value add" id="special-add">0</span>
+                <span class="unit">分</span>
+
+                <div class="total-row">
+                    <span class="label">本次比赛最终得分：</span>
+                    <span class="value" id="total-score">0</span>
+                    <span class="unit">分</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 关卡加分配置
+        const LEVEL_SCORE_MAP = {
+            level1: 15, level2: 30, level3: 20, level4: 45, level5: 45,
+            level6: 30, level7: 40, level8: 30, level9: 45, level10: 50,
+            level11: 80, level12: 30, level13: 45, level14: 30, level15: 40,
+            level16: 20, level17: 30
+        };
+
+        // 核心计算函数
+        function calculateScore() {
+            // 1. 基础难度分
+            const difficulty = document.getElementById("difficulty").value;
+            const baseScore = Number(document.getElementById("base-score").value) || 0;
+            let difficultyScore = difficulty === "N18" ? baseScore * 1.2 : baseScore;
+            difficultyScore = Number(difficultyScore.toFixed(1));
+
+            // 2. 源石碇扣分
+            const bankNum = Number(document.getElementById("bank").value) || 0;
+            const bankScore = bankNum > 200 ? (bankNum - 200) * 5 : 0;
+
+            // 3. 干员加分
+            const tempOperator = Number(document.getElementById("temp-operator").value) || 0;
+            const tempOperatorScore = tempOperator * 10;
+            const noBanOperator = document.getElementById("no-ban-operator").checked;
+            const operatorAdd = noBanOperator ? 325 : 0;
+            const totalOperatorAdd = operatorAdd + tempOperatorScore;
+
+            // 4. 路线加分
+            const routeValue = document.querySelector('input[name="route"]:checked').value;
+            const routeAdd = Number(routeValue);
+
+            // 5. 关卡加分
+            let levelAdd = 0;
+            for (const [levelId, score] of Object.entries(LEVEL_SCORE_MAP)) {
+                const levelCount = Number(document.getElementById(levelId).value) || 0;
+                levelAdd += score * levelCount;
+            }
+
+            // 6. 特殊加分
+            const kill4Count = Number(document.getElementById("kill4").value) || 0;
+            const collectionCount = Number(document.getElementById("collection").value) || 0;
+            const kill1Checked = document.getElementById("kill1").checked;
+            const specialAdd = (kill4Count * 5) + (collectionCount * 5) + (kill1Checked ? 7 : 0);
+
+            // 7. 总分计算
+            const totalScore = Number((difficultyScore - bankScore + totalOperatorAdd + routeAdd + levelAdd + specialAdd).toFixed(1));
+
+            // 8. 更新页面显示
+            document.getElementById("difficulty-score").innerText = difficultyScore;
+            document.getElementById("bank-score").innerText = -1 * bankScore;
+            document.getElementById("operator-add").innerText = totalOperatorAdd;
+            document.getElementById("route-add").innerText = routeAdd;
+            document.getElementById("level-add").innerText = levelAdd;
+            document.getElementById("special-add").innerText = specialAdd;
+            document.getElementById("total-score").innerText = totalScore;
+        }
+
+        // 页面加载初始化
+        window.onload = function () {
+            calculateScore();
+        };
+    </script>
+</body>
+
+</html>
