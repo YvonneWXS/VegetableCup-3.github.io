@@ -335,6 +335,10 @@
                     <label for="route0">未达成任何结局，不加分</label>
                 </div>
                 <div class="route-item">
+                    <input type="radio" name="route" id="route6" value="0.9" onchange="calculateScore()">
+                    <label for="route6">仅达成1结局，局内结算分*0.9</label>
+                </div>
+                <div class="route-item">
                     <input type="radio" name="route" id="route1" value="200" onchange="calculateScore()">
                     <label for="route1">达成结局235 +200分</label>
                 </div>
@@ -531,7 +535,12 @@
 
             // 4. 路线加分
             const routeValue = document.querySelector('input[name="route"]:checked').value;
-            const routeAdd = Number(routeValue);
+            const routeAdd = Number(routeValue) == 0.9 ? 0 : Number(routeValue);
+            if (Number(routeValue) == 0.9) {
+                // 仅达成1结局，局内结算分*0.9
+                // routeAdd = Number((difficultyScore * 0.9).toFixed(1));
+                difficultyScore = Number((difficultyScore * 0.9).toFixed(1));
+            }
 
             // 5. 关卡加分
             let levelAdd = 0;
